@@ -7,10 +7,6 @@ import (
 	"time"
 )
 
-// Sinks pour empêcher les optimisations du compilateur.
-var sink4 [4]byte
-var sink32 uint32
-
 // Génère des jeux d'entrée réutilisables (évite de mesurer le coût du rand dans le hot loop).
 func makeInputs32(n int) []uint32 {
 	r := rand.New(rand.NewSource(42))
@@ -21,12 +17,12 @@ func makeInputs32(n int) []uint32 {
 	return in
 }
 
-func makeInputs4(n int) [][4]byte {
+func makeInputs4(n int) []IPv4 {
 	r := rand.New(rand.NewSource(1337))
-	in := make([][4]byte, n)
+	in := make([]IPv4, n)
 	for i := range in {
 		v := r.Uint32()
-		in[i] = [4]byte{byte(v >> 24), byte(v >> 16), byte(v >> 8), byte(v)}
+		in[i] = IPv4{byte(v >> 24), byte(v >> 16), byte(v >> 8), byte(v)}
 	}
 	return in
 }
@@ -38,7 +34,7 @@ func BenchmarkToArray(b *testing.B) {
 	b.ReportAllocs()
 	b.SetBytes(4) // on "traite" 4 octets par op (résultat)
 	for i := 0; i < b.N; i++ {
-		sink4 = ToArray(inputs[i&(N-1)])
+		_ = ToArray(inputs[i&(N-1)])
 	}
 }
 
@@ -49,7 +45,7 @@ func BenchmarkToUint32(b *testing.B) {
 	b.ReportAllocs()
 	b.SetBytes(4) // on "traite" 4 octets d'entrée par op
 	for i := 0; i < b.N; i++ {
-		sink32 = ToUint32(inputs[i&(N-1)])
+		_ = ToUint32(inputs[i&(N-1)])
 	}
 }
 
@@ -70,12 +66,12 @@ func TestRoundTrip(t *testing.T) {
 func TestKnownVectors(t *testing.T) {
 	cases := []struct {
 		v   uint32
-		arr [4]byte
+		arr IPv4
 	}{
-		{0, [4]byte{0, 0, 0, 0}},
-		{1, [4]byte{0, 0, 0, 1}},
-		{0xFF_FF_FF_FF, [4]byte{255, 255, 255, 255}},
-		{0xC0_A8_00_01, [4]byte{192, 168, 0, 1}}, // 192.168.0.1
+		{0, IPv4{0, 0, 0, 0}},
+		{1, IPv4{0, 0, 0, 1}},
+		{0xFF_FF_FF_FF, IPv4{255, 255, 255, 255}},
+		{0xC0_A8_00_01, IPv4{192, 168, 0, 1}}, // 192.168.0.1
 	}
 	for _, c := range cases {
 
