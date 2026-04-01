@@ -2,7 +2,7 @@ package main
 
 import "fmt"
 
-type IPv4 = []byte
+type IPv4 = [4]byte
 
 // Well-known IPv4 addresses
 var (
@@ -19,10 +19,10 @@ func main() {
 	fmt.Println(ip)
 }
 
-func ToArray(v uint32) []byte {
-	return []byte{byte(v >> 24), byte(v >> 16), byte(v >> 8), byte(v)}
+func ToArray(v uint32) [4]byte {
+	return [4]byte{byte(v >> 24), byte(v >> 16), byte(v >> 8), byte(v)}
 }
 
-func ToUint32(a []byte) uint32 {
+func ToUint32(a [4]byte) uint32 {
 	return (uint32(a[0]) << 24) | (uint32(a[1]) << 16) | (uint32(a[2]) << 8) | uint32(a[3])
 }

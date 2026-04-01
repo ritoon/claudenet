@@ -8,7 +8,7 @@ import (
 )
 
 // Sinks pour empêcher les optimisations du compilateur.
-var sink4 []byte
+var sink4 [4]byte
 var sink32 uint32
 
 // Génère des jeux d'entrée réutilisables (évite de mesurer le coût du rand dans le hot loop).
@@ -21,12 +21,12 @@ func makeInputs32(n int) []uint32 {
 	return in
 }
 
-func makeInputs4(n int) [][]byte {
+func makeInputs4(n int) [][4]byte {
 	r := rand.New(rand.NewSource(1337))
-	in := make([][]byte, n)
+	in := make([][4]byte, n)
 	for i := range in {
 		v := r.Uint32()
-		in[i] = []byte{byte(v >> 24), byte(v >> 16), byte(v >> 8), byte(v)}
+		in[i] = [4]byte{byte(v >> 24), byte(v >> 16), byte(v >> 8), byte(v)}
 	}
 	return in
 }
@@ -70,12 +70,12 @@ func TestRoundTrip(t *testing.T) {
 func TestKnownVectors(t *testing.T) {
 	cases := []struct {
 		v   uint32
-		arr []byte
+		arr [4]byte
 	}{
-		{0, []byte{0, 0, 0, 0}},
-		{1, []byte{0, 0, 0, 1}},
-		{0xFF_FF_FF_FF, []byte{255, 255, 255, 255}},
-		{0xC0_A8_00_01, []byte{192, 168, 0, 1}}, // 192.168.0.1
+		{0, [4]byte{0, 0, 0, 0}},
+		{1, [4]byte{0, 0, 0, 1}},
+		{0xFF_FF_FF_FF, [4]byte{255, 255, 255, 255}},
+		{0xC0_A8_00_01, [4]byte{192, 168, 0, 1}}, // 192.168.0.1
 	}
 	for _, c := range cases {
 
