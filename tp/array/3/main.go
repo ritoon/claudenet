@@ -33,7 +33,11 @@ func mime(r io.Reader) (string, error) {
 	switch {
 	case n >= 8 && [8]byte(buf[:8]) == pngSig:
 		return "image/png", nil
+	case n >= 3 && [3]byte(buf[:4]) == jpgSig3:
+		return "image/jpeg", nil
 		// Ajouter ici le test pour voir si c'est un pdf ou une image jpg
+	case n >= 5 && [5]byte(buf[:6]) == pdfSig:
+		return "application/pdf", nil
 	}
 	return "application/octet-stream", nil
 }

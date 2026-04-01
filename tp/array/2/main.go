@@ -19,7 +19,7 @@ func ReadFileBuffered(filepath string, w io.Writer) error {
 	}
 	defer f.Close()
 
-	var buf [16 << 10]byte // tampon fixe sur la pile 16kbits
+	var buf [2048 << 10]byte // tampon fixe sur la pile 16kbits
 
 	for {
 		n, err := f.Read(buf[:]) // on lit dans le slice basé sur l'array
