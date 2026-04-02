@@ -1,0 +1,26 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/ritoon/claudenet/tp/array/1
+cpu: Apple M4 Pro
+BenchmarkToArray-14     	1000000000	         0.2313 ns/op	17290.92 MB/s	       0 B/op	       0 allocs/op
+BenchmarkToArray-14     	1000000000	         0.2229 ns/op	17943.53 MB/s	       0 B/op	       0 allocs/op
+BenchmarkToArray-14     	1000000000	         0.2235 ns/op	17900.25 MB/s	       0 B/op	       0 allocs/op
+BenchmarkToArray-14     	1000000000	         0.2234 ns/op	17903.12 MB/s	       0 B/op	       0 allocs/op
+BenchmarkToArray-14     	1000000000	         0.2228 ns/op	17954.75 MB/s	       0 B/op	       0 allocs/op
+BenchmarkToArray-14     	1000000000	         0.2228 ns/op	17956.83 MB/s	       0 B/op	       0 allocs/op
+BenchmarkToArray-14     	1000000000	         0.2226 ns/op	17972.60 MB/s	       0 B/op	       0 allocs/op
+BenchmarkToArray-14     	1000000000	         0.2226 ns/op	17969.93 MB/s	       0 B/op	       0 allocs/op
+BenchmarkToArray-14     	1000000000	         0.2228 ns/op	17953.52 MB/s	       0 B/op	       0 allocs/op
+BenchmarkToArray-14     	1000000000	         0.2227 ns/op	17962.70 MB/s	       0 B/op	       0 allocs/op
+BenchmarkToUint32-14    	1000000000	         0.2225 ns/op	17980.05 MB/s	       0 B/op	       0 allocs/op
+BenchmarkToUint32-14    	1000000000	         0.2229 ns/op	17943.35 MB/s	       0 B/op	       0 allocs/op
+BenchmarkToUint32-14    	1000000000	         0.2225 ns/op	17978.43 MB/s	       0 B/op	       0 allocs/op
+BenchmarkToUint32-14    	1000000000	         0.2223 ns/op	17990.94 MB/s	       0 B/op	       0 allocs/op
+BenchmarkToUint32-14    	1000000000	         0.2268 ns/op	17637.51 MB/s	       0 B/op	       0 allocs/op
+BenchmarkToUint32-14    	1000000000	         0.2223 ns/op	17993.78 MB/s	       0 B/op	       0 allocs/op
+BenchmarkToUint32-14    	1000000000	         0.2224 ns/op	17987.55 MB/s	       0 B/op	       0 allocs/op
+BenchmarkToUint32-14    	1000000000	         0.2224 ns/op	17982.17 MB/s	       0 B/op	       0 allocs/op
+BenchmarkToUint32-14    	1000000000	         0.2225 ns/op	17974.57 MB/s	       0 B/op	       0 allocs/op
+BenchmarkToUint32-14    	1000000000	         0.2223 ns/op	17996.09 MB/s	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/ritoon/claudenet/tp/array/1	5.140s
