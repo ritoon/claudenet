@@ -34,6 +34,26 @@ func NewCatResponse(cat *entity.Cat) *CatResponse {
 	}
 }
 
+// DogResponse is the response DTO for a Dog.
+type DogResponse struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Breed string `json:"breed"`
+	Color string `json:"color"`
+	Age   int    `json:"age"`
+}
+
+// NewDogResponse converts an entity.Dog to a DogResponse.
+func NewDogResponse(dog *entity.Dog) *DogResponse {
+	return &DogResponse{
+		ID:    dog.ID,
+		Name:  dog.Name,
+		Breed: dog.Breed,
+		Color: dog.Color,
+		Age:   dog.Age,
+	}
+}
+
 // WriteJSON writes a response as JSON to the HTTP response writer.
 func WriteJSON(w http.ResponseWriter, statusCode int, data interface{}) error {
 	w.Header().Set("Content-Type", "application/json")

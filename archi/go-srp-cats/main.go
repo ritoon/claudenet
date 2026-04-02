@@ -15,34 +15,56 @@ import (
 )
 
 func main() {
-	// Initialize dependencies
-	store := storage.NewMemoryStore()
-	repo := repository.NewCatRepository(store)
-	validator := validation.NewCatValidator()
+	// Initialize shared dependencies
 	idGen := id.NewGenerator()
 
-	// Create service
-	svc := service.NewCatService(repo, validator, idGen)
+	// Cat dependencies
+	catStore := storage.NewMemoryStore()
+	catRepo := repository.NewCatRepository(catStore)
+	catValidator := validation.NewCatValidator()
+	catSvc := service.NewCatService(catRepo, catValidator, idGen)
 
-	// Create handlers
-	createHandler := handler.NewCreateCatHandler(svc)
-	getCatHandler := handler.NewGetCatHandler(svc)
-	getAllHandler := handler.NewGetAllCatsHandler(svc)
-	updateHandler := handler.NewUpdateCatHandler(svc)
-	deleteHandler := handler.NewDeleteCatHandler(svc)
+	// Cat handlers
+	createCatHandler := handler.NewCreateCatHandler(catSvc)
+	getCatHandler := handler.NewGetCatHandler(catSvc)
+	getAllCatsHandler := handler.NewGetAllCatsHandler(catSvc)
+	updateCatHandler := handler.NewUpdateCatHandler(catSvc)
+	deleteCatHandler := handler.NewDeleteCatHandler(catSvc)
+
+	// Dog dependencies
+	dogStore := storage.NewMemoryStore()
+	dogRepo := repository.NewDogRepository(dogStore)
+	dogValidator := validation.NewDogValidator()
+	dogSvc := service.NewDogService(dogRepo, dogValidator, idGen)
+
+	// Dog handlers
+	createDogHandler := handler.NewCreateDogHandler(dogSvc)
+	getDogHandler := handler.NewGetDogHandler(dogSvc)
+	getAllDogsHandler := handler.NewGetAllDogsHandler(dogSvc)
+	updateDogHandler := handler.NewUpdateDogHandler(dogSvc)
+	deleteDogHandler := handler.NewDeleteDogHandler(dogSvc)
 
 	// Create router
-	router := routing.NewRouter(createHandler, getCatHandler, getAllHandler, updateHandler, deleteHandler)
+	router := routing.NewRouter(
+		createCatHandler, getCatHandler, getAllCatsHandler, updateCatHandler, deleteCatHandler,
+		createDogHandler, getDogHandler, getAllDogsHandler, updateDogHandler, deleteDogHandler,
+	)
 
 	// Start server
 	port := ":8080"
-	fmt.Printf("Starting Cat CRUD API server on http://localhost%s\n", port)
+	fmt.Printf("Starting Cat & Dog CRUD API server on http://localhost%s\n", port)
 	fmt.Println("Endpoints:")
+	fmt.Println("  GET    /health     - Health check")
 	fmt.Println("  POST   /cats       - Create a new cat")
 	fmt.Println("  GET    /cats       - Get all cats")
 	fmt.Println("  GET    /cats/{id}  - Get a specific cat")
 	fmt.Println("  PUT    /cats/{id}  - Update a cat")
 	fmt.Println("  DELETE /cats/{id}  - Delete a cat")
+	fmt.Println("  POST   /dogs       - Create a new dog")
+	fmt.Println("  GET    /dogs       - Get all dogs")
+	fmt.Println("  GET    /dogs/{id}  - Get a specific dog")
+	fmt.Println("  PUT    /dogs/{id}  - Update a dog")
+	fmt.Println("  DELETE /dogs/{id}  - Delete a dog")
 
 	if err := http.ListenAndServe(port, router); err != nil {
 		log.Fatalf("Server error: %v", err)

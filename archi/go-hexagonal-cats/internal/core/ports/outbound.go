@@ -21,3 +21,21 @@ type CatRepository interface {
 	// Exists checks if a cat with given ID exists
 	Exists(id string) bool
 }
+
+// DogRepository defines the outbound (driven) port for dog persistence
+type DogRepository interface {
+	// Save stores a dog or updates it if it already exists
+	Save(dog *domain.Dog) error
+
+	// FindByID retrieves a dog by its ID, returns nil if not found
+	FindByID(id string) (*domain.Dog, error)
+
+	// FindAll retrieves all dogs
+	FindAll() ([]*domain.Dog, error)
+
+	// Delete removes a dog by its ID
+	Delete(id string) error
+
+	// Exists checks if a dog with given ID exists
+	Exists(id string) bool
+}
