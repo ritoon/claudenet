@@ -1,6 +1,9 @@
 package calculate
 
-import "testing"
+import (
+	"math"
+	"testing"
+)
 
 func TestAdd(t *testing.T) {
 	data := []struct {
@@ -13,10 +16,26 @@ func TestAdd(t *testing.T) {
 		{"b", 1, 9, 10},
 	}
 	for _, d := range data {
-		got := Add(d.valueInA, d.valueInB)
+		got, err := Add(d.valueInA, d.valueInB)
+		if err != nil {
+			t.Errorf("test %q: unexpected error: %v", d.testTitle, err)
+			continue
+		}
 		if got != d.expected {
 			t.Errorf("test %q: got %d, expected %d", d.testTitle, got, d.expected)
 		}
+	}
+}
+
+func TestAddOverflow(t *testing.T) {
+	_, err := Add(math.MaxInt, 1)
+	if err != ErrOverflow {
+		t.Errorf("expected ErrOverflow, got %v", err)
+	}
+
+	_, err = Add(math.MinInt, -1)
+	if err != ErrOverflow {
+		t.Errorf("expected ErrOverflow for MinInt + (-1), got %v", err)
 	}
 }
 
@@ -34,10 +53,26 @@ func TestSub(t *testing.T) {
 		{"negative numbers", -3, -2, -1},
 	}
 	for _, d := range data {
-		got := Sub(d.valueInA, d.valueInB)
+		got, err := Sub(d.valueInA, d.valueInB)
+		if err != nil {
+			t.Errorf("test %q: unexpected error: %v", d.testTitle, err)
+			continue
+		}
 		if got != d.expected {
 			t.Errorf("test %q: got %d, expected %d", d.testTitle, got, d.expected)
 		}
+	}
+}
+
+func TestSubOverflow(t *testing.T) {
+	_, err := Sub(math.MinInt, 1)
+	if err != ErrOverflow {
+		t.Errorf("expected ErrOverflow, got %v", err)
+	}
+
+	_, err = Sub(math.MaxInt, -1)
+	if err != ErrOverflow {
+		t.Errorf("expected ErrOverflow for MaxInt - (-1), got %v", err)
 	}
 }
 
@@ -56,20 +91,29 @@ func TestDivide(t *testing.T) {
 		{"both negative", -10, -2, 5},
 	}
 	for _, d := range data {
-		got := Divide(d.valueInA, d.valueInB)
+		got, err := Divide(d.valueInA, d.valueInB)
+		if err != nil {
+			t.Errorf("test %q: unexpected error: %v", d.testTitle, err)
+			continue
+		}
 		if got != d.expected {
 			t.Errorf("test %q: got %d, expected %d", d.testTitle, got, d.expected)
 		}
 	}
 }
 
-func TestDividePanicsOnZero(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("expected panic on divide by zero")
-		}
-	}()
-	Divide(1, 0)
+func TestDivideDivisionByZero(t *testing.T) {
+	_, err := Divide(1, 0)
+	if err != ErrDivisionByZero {
+		t.Errorf("expected ErrDivisionByZero, got %v", err)
+	}
+}
+
+func TestDivideOverflow(t *testing.T) {
+	_, err := Divide(math.MinInt, -1)
+	if err != ErrOverflow {
+		t.Errorf("expected ErrOverflow, got %v", err)
+	}
 }
 
 func TestMultiply(t *testing.T) {
@@ -87,9 +131,25 @@ func TestMultiply(t *testing.T) {
 		{"zeros", 0, 0, 0},
 	}
 	for _, d := range data {
-		got := Multiply(d.valueInA, d.valueInB)
+		got, err := Multiply(d.valueInA, d.valueInB)
+		if err != nil {
+			t.Errorf("test %q: unexpected error: %v", d.testTitle, err)
+			continue
+		}
 		if got != d.expected {
 			t.Errorf("test %q: got %d, expected %d", d.testTitle, got, d.expected)
 		}
+	}
+}
+
+func TestMultiplyOverflow(t *testing.T) {
+	_, err := Multiply(math.MaxInt, 2)
+	if err != ErrOverflow {
+		t.Errorf("expected ErrOverflow, got %v", err)
+	}
+
+	_, err = Multiply(math.MinInt, 2)
+	if err != ErrOverflow {
+		t.Errorf("expected ErrOverflow for MinInt * 2, got %v", err)
 	}
 }
