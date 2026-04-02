@@ -43,6 +43,7 @@ func handlerCaracters(c *gin.Context) {
 		return
 	}
 	// 2 initialiser une structure de type any
+	// var payload any
 	payload := make(CaracterResponse)
 
 	// 3 réaliser un bind avec le package encoding/json
