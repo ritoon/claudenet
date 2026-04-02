@@ -8,55 +8,55 @@ import (
 	"go-layered-cats/service"
 )
 
-// CatHandler handles HTTP requests related to cats
-type CatHandler struct {
-	service *service.CatService
+// DogHandler handles HTTP requests related to dogs
+type DogHandler struct {
+	service *service.DogService
 }
 
-// NewCatHandler creates a new instance of CatHandler
-func NewCatHandler(service *service.CatService) *CatHandler {
-	return &CatHandler{
+// NewDogHandler creates a new instance of DogHandler
+func NewDogHandler(service *service.DogService) *DogHandler {
+	return &DogHandler{
 		service: service,
 	}
 }
 
-// CreateCat handles POST /cats request
-func (h *CatHandler) CreateCat(w http.ResponseWriter, r *http.Request) {
+// CreateDog handles POST /dogs request
+func (h *DogHandler) CreateDog(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		writeJSONError(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	// Parse request body
-	var cat model.Cat
-	if err := parseJSON(r.Body, &cat); err != nil {
+	var dog model.Dog
+	if err := parseJSON(r.Body, &dog); err != nil {
 		writeJSONError(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	// Call service layer
-	createdCat, err := h.service.CreateCat(&cat)
+	createdDog, err := h.service.CreateDog(&dog)
 	if err != nil {
 		writeJSONError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	// Return success response
-	writeJSON(w, createdCat, http.StatusCreated)
+	writeJSON(w, createdDog, http.StatusCreated)
 }
 
-// GetCat handles GET /cats/{id} request
-func (h *CatHandler) GetCat(w http.ResponseWriter, r *http.Request) {
+// GetDog handles GET /dogs/{id} request
+func (h *DogHandler) GetDog(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		writeJSONError(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	// Extract ID from path
-	id := strings.TrimPrefix(r.URL.Path, "/cats/")
+	id := strings.TrimPrefix(r.URL.Path, "/dogs/")
 
 	// Call service layer
-	cat, err := h.service.GetCatByID(id)
+	dog, err := h.service.GetDogByID(id)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			writeJSONError(w, err.Error(), http.StatusNotFound)
@@ -67,46 +67,46 @@ func (h *CatHandler) GetCat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Return success response
-	writeJSON(w, cat, http.StatusOK)
+	writeJSON(w, dog, http.StatusOK)
 }
 
-// GetAllCats handles GET /cats request
-func (h *CatHandler) GetAllCats(w http.ResponseWriter, r *http.Request) {
+// GetAlldogs handles GET /dogs request
+func (h *DogHandler) GetAlldogs(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		writeJSONError(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	// Call service layer
-	cats, err := h.service.GetAllCats()
+	dogs, err := h.service.GetAllDogs()
 	if err != nil {
 		writeJSONError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	// Return success response
-	writeJSON(w, cats, http.StatusOK)
+	writeJSON(w, dogs, http.StatusOK)
 }
 
-// UpdateCat handles PUT /cats/{id} request
-func (h *CatHandler) UpdateCat(w http.ResponseWriter, r *http.Request) {
+// UpdateDog handles PUT /dogs/{id} request
+func (h *DogHandler) UpdateDog(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPut {
 		writeJSONError(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	// Extract ID from path
-	id := strings.TrimPrefix(r.URL.Path, "/cats/")
+	id := strings.TrimPrefix(r.URL.Path, "/dogs/")
 
 	// Parse request body
-	var cat model.Cat
-	if err := parseJSON(r.Body, &cat); err != nil {
+	var dog model.Dog
+	if err := parseJSON(r.Body, &dog); err != nil {
 		writeJSONError(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	// Call service layer
-	updatedCat, err := h.service.UpdateCat(id, &cat)
+	updatedDog, err := h.service.UpdateDog(id, &dog)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			writeJSONError(w, err.Error(), http.StatusNotFound)
@@ -117,21 +117,21 @@ func (h *CatHandler) UpdateCat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Return success response
-	writeJSON(w, updatedCat, http.StatusOK)
+	writeJSON(w, updatedDog, http.StatusOK)
 }
 
-// DeleteCat handles DELETE /cats/{id} request
-func (h *CatHandler) DeleteCat(w http.ResponseWriter, r *http.Request) {
+// DeleteDog handles DELETE /dogs/{id} request
+func (h *DogHandler) DeleteDog(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		writeJSONError(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	// Extract ID from path
-	id := strings.TrimPrefix(r.URL.Path, "/cats/")
+	id := strings.TrimPrefix(r.URL.Path, "/dogs/")
 
 	// Call service layer
-	if err := h.service.DeleteCat(id); err != nil {
+	if err := h.service.DeleteDog(id); err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			writeJSONError(w, err.Error(), http.StatusNotFound)
 		} else {
@@ -145,35 +145,35 @@ func (h *CatHandler) DeleteCat(w http.ResponseWriter, r *http.Request) {
 }
 
 // ServeHTTP implements http.Handler interface for routing
-func (h *CatHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *DogHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
 
 	// Handle GET requests
 	if r.Method == http.MethodGet {
-		if path == "/cats" {
-			h.GetAllCats(w, r)
+		if path == "/dogs" {
+			h.GetAlldogs(w, r)
 			return
-		} else if strings.HasPrefix(path, "/cats/") && len(path) > 6 {
-			h.GetCat(w, r)
+		} else if strings.HasPrefix(path, "/dogs/") && len(path) > 6 {
+			h.GetDog(w, r)
 			return
 		}
 	}
 
 	// Handle POST requests
-	if r.Method == http.MethodPost && path == "/cats" {
-		h.CreateCat(w, r)
+	if r.Method == http.MethodPost && path == "/dogs" {
+		h.CreateDog(w, r)
 		return
 	}
 
 	// Handle PUT requests
-	if r.Method == http.MethodPut && strings.HasPrefix(path, "/cats/") && len(path) > 6 {
-		h.UpdateCat(w, r)
+	if r.Method == http.MethodPut && strings.HasPrefix(path, "/dogs/") && len(path) > 6 {
+		h.UpdateDog(w, r)
 		return
 	}
 
 	// Handle DELETE requests
-	if r.Method == http.MethodDelete && strings.HasPrefix(path, "/cats/") && len(path) > 6 {
-		h.DeleteCat(w, r)
+	if r.Method == http.MethodDelete && strings.HasPrefix(path, "/dogs/") && len(path) > 6 {
+		h.DeleteDog(w, r)
 		return
 	}
 

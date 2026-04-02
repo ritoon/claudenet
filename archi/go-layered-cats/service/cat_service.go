@@ -30,7 +30,7 @@ func (s *CatService) CreateCat(cat *model.Cat) (*model.Cat, error) {
 	}
 
 	// Generate UUID for the cat
-	cat.ID = uuid.New().String()
+	cat.UUID = uuid.New()
 
 	// Save to repository
 	if err := s.repo.Create(cat); err != nil {
