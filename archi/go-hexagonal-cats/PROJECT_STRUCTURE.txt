@@ -1,0 +1,93 @@
+GO-HEXAGONAL-CATS PROJECT STRUCTURE
+====================================
+
+go-hexagonal-cats/
+├── README.md                                # Complete French documentation
+├── go.mod                                   # Go module definition
+├── main.go                                  # Application entry point (Dependency Injection)
+│
+└── internal/                                # Private application code
+    ├── core/                                # Core business logic (ZERO external dependencies)
+    │   ├── domain/
+    │   │   └── cat.go                       # Domain entities: Cat, CreateCatRequest, UpdateCatRequest
+    │   │
+    │   ├── ports/                           # Port definitions (interfaces/contracts)
+    │   │   ├── inbound.go                   # CatService - Inbound Port (what app CAN DO)
+    │   │   │                                # Defines use cases: CreateCat, GetCatByID, GetAllCats, UpdateCat, DeleteCat
+    │   │   │
+    │   │   └── outbound.go                  # CatRepository - Outbound Port (what app NEEDS)
+    │   │                                    # Defines persistence contract: Save, FindByID, FindAll, Delete, Exists
+    │   │
+    │   └── service/
+    │       └── cat_service.go               # CatApplicationService
+    │                                        # Implements inbound port (CatService)
+    │                                        # Uses outbound port (CatRepository)
+    │                                        # Contains business logic and validation
+    │
+    └── adapters/                            # Technology-specific implementations
+        ├── inbound/                         # Driving side - receives requests from external world
+        │   └── http/
+        │       └── handler.go               # HTTP Adapter (Handler)
+        │                                    # Receives HTTP requests
+        │                                    # Calls inbound port (CatService)
+        │                                    # Returns HTTP responses
+        │                                    # Implements HTTP routing and serialization
+        │
+        └── outbound/                        # Driven side - implements persistence
+            └── memory/
+                └── cat_repository.go        # In-Memory Repository Adapter
+                                             # Implements outbound port (CatRepository)
+                                             # Stores cats in memory using map + RWMutex
+                                             # Thread-safe operations
+
+DEPENDENCY FLOW
+===============
+
+The application follows strict dependency rules:
+
+Domain (no deps)
+    ↑
+Ports (depends on domain)
+    ↑
+Service (depends on domain + ports)
+    ↑
+Adapters (depends on domain + ports)
+    ↑
+Main (wires everything together)
+
+KEY ARCHITECTURAL PRINCIPLES
+=============================
+
+1. CORE INDEPENDENCE
+   - internal/core has ZERO dependencies on adapters
+   - business logic is completely isolated from technology
+
+2. PORT CONTRACTS
+   - inbound ports define what the app CAN DO
+   - outbound ports define what the app NEEDS
+   - adapters implement or use these contracts
+
+3. DEPENDENCY INJECTION
+   - main.go creates instances and wires them together
+   - each component receives its dependencies as parameters
+   - no hidden dependencies or global state
+
+4. ADAPTABILITY
+   - add new inbound adapters (gRPC, WebSocket) without changing service
+   - swap outbound adapters (PostgreSQL, Redis) without changing service
+   - single responsibility per adapter
+
+ADDING NEW ADAPTERS
+===================
+
+To add a new inbound adapter (e.g., gRPC):
+  1. Create internal/adapters/inbound/grpc/
+  2. Implement the CatService port in your adapter
+  3. Wire it in main.go - the service doesn't need to change
+
+To add a new outbound adapter (e.g., PostgreSQL):
+  1. Create internal/adapters/outbound/postgres/
+  2. Implement the CatRepository port in your adapter
+  3. Wire it in main.go - the service doesn't need to change
+
+This flexibility is the power of Hexagonal Architecture!

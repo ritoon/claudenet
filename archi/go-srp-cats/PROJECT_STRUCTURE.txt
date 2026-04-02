@@ -1,0 +1,495 @@
+================================================================================
+GO SRP CATS - COMPLETE PROJECT STRUCTURE
+================================================================================
+
+PROJECT ROOT: /sessions/nifty-busy-mccarthy/mnt/cleancouche/go-srp-cats/
+
+DIRECTORY TREE:
+================================================================================
+
+go-srp-cats/
+│
+├── go.mod                          # Go module definition: "go-srp-cats"
+├── main.go                         # Entry point - Dependency Injection setup
+├── README.md                       # Complete SRP documentation (French)
+├── PROJECT_STRUCTURE.txt           # This file
+│
+└── internal/                       # Private package (inaccessible from outside)
+    │
+    ├── entity/
+    │   └── cat.go                  # ✓ SINGLE RESPONSIBILITY: Data definition only
+    │                               │  Reason to change: Cat fields change
+    │                               │  (new field, remove field, rename field)
+    │                               │  No validation, no JSON tags, pure struct
+    │
+    ├── id/
+    │   └── generator.go            # ✓ SINGLE RESPONSIBILITY: ID generation only
+    │                               │  Reason to change: ID strategy changes
+    │                               │  (Random → UUID → Ulid → Snowflake)
+    │                               │  Uses crypto/rand for secure randomness
+    │
+    ├── validation/
+    │   └── cat_validator.go        # ✓ SINGLE RESPONSIBILITY: Validation rules only
+    │                               │  Reason to change: Business rules change
+    │                               │  (age limit, name length, breed validation)
+    │                               │  Contains: ValidateCreate, ValidateUpdate
+    │
+    ├── storage/
+    │   └── memory_store.go         # ✓ SINGLE RESPONSIBILITY: Persistence layer only
+    │                               │  Reason to change: Storage engine changes
+    │                               │  (Memory → PostgreSQL → MongoDB → Redis)
+    │                               │  Thread-safe with sync.RWMutex
+    │                               │  Generic: Get, Set, Delete, GetAll, Exists
+    │
+    ├── repository/
+    │   └── cat_repository.go       # ✓ SINGLE RESPONSIBILITY: Data access logic only
+    │                               │  Reason to change: Query patterns change
+    │                               │  Maps domain operations to storage calls
+    │                               │  Contains: Save, GetByID, GetAll, Update, Delete
+    │
+    ├── service/
+    │   └── cat_service.go          # ✓ SINGLE RESPONSIBILITY: Orchestration only
+    │                               │  Reason to change: Business workflow changes
+    │                               │  Coordinates: Validator → ID Gen → Repository
+    │                               │  NO validation logic (delegates to validator)
+    │                               │  NO storage logic (delegates to repository)
+    │                               │  Contains: CreateCat, GetCatByID, UpdateCat, DeleteCat
+    │
+    ├── serialization/
+    │   ├── request.go              # ✓ SINGLE RESPONSIBILITY: Request deserialization only
+    │   │                           │  Reason to change: Input format changes
+    │   │                           │  (JSON → XML → Protobuf → YAML)
+    │   │                           │  DTOs: CreateCatRequest, UpdateCatRequest
+    │   │                           │  Functions: DecodeCreateCatRequest, DecodeUpdateCatRequest
+    │   │
+    │   └── response.go             # ✓ SINGLE RESPONSIBILITY: Response serialization only
+    │                               │  Reason to change: Output format changes
+    │                               │  (JSON → XML → Protobuf → YAML)
+    │                               │  DTOs: CatResponse, ErrorResponse
+    │                               │  Functions: WriteJSON, WriteError, NewCatResponse
+    │
+    ├── handler/
+    │   ├── create_cat.go           # ✓ SINGLE RESPONSIBILITY: POST /cats endpoint only
+    │   │                           │  Reason to change: CREATE logic changes
+    │   │                           │  Flow: Decode → Service.CreateCat → Encode (201)
+    │   │
+    │   ├── get_cat.go              # ✓ SINGLE RESPONSIBILITY: GET /cats/{id} endpoint only
+    │   │                           │  Reason to change: GET ONE logic changes
+    │   │                           │  Flow: Extract ID → Service.GetCatByID → Encode (200)
+    │   │
+    │   ├── get_all_cats.go         # ✓ SINGLE RESPONSIBILITY: GET /cats endpoint only
+    │   │                           │  Reason to change: GET ALL logic changes
+    │   │                           │  Flow: Service.GetAllCats → Encode (200)
+    │   │
+    │   ├── update_cat.go           # ✓ SINGLE RESPONSIBILITY: PUT /cats/{id} endpoint only
+    │   │                           │  Reason to change: UPDATE logic changes
+    │   │                           │  Flow: Extract ID → Decode → Service.UpdateCat → Encode (200)
+    │   │
+    │   └── delete_cat.go           # ✓ SINGLE RESPONSIBILITY: DELETE /cats/{id} endpoint only
+    │                               │  Reason to change: DELETE logic changes
+    │                               │  Flow: Extract ID → Service.DeleteCat → (204)
+    │
+    ├── routing/
+    │   └── router.go               # ✓ SINGLE RESPONSIBILITY: URL routing only
+    │                               │  Reason to change: URL mappings change
+    │                               │  (new routes, HTTP method changes)
+    │                               │  Dispatches to correct handler based on path + method
+    │
+    └── errors/
+        └── errors.go               # ✓ SINGLE RESPONSIBILITY: Error taxonomy only
+                                    │  Reason to change: Error types change
+                                    │  Custom types: ValidationError, NotFoundError, AlreadyExistsError
+                                    │  Helper functions: IsValidationError, IsNotFoundError, etc
+
+================================================================================
+SRP RULES ENFORCED
+================================================================================
+
+1. ENTITY (cat.go)
+   ✓ Only contains: Cat struct with fields (ID, Name, Breed, Age, Color)
+   ✓ No JSON tags
+   ✓ No validation methods
+   ✓ No business logic
+   ✓ Pure data structure
+   Reason to change: If Cat attributes change
+
+2. ID GENERATOR (id/generator.go)
+   ✓ Only generates unique IDs
+   ✓ Uses crypto/rand for security
+   ✓ Completely isolated
+   Reason to change: If ID generation strategy changes
+
+3. VALIDATOR (validation/cat_validator.go)
+   ✓ Only validates business rules
+   ✓ No HTTP concerns
+   ✓ No storage concerns
+   ✓ Can be used independently (CLI, gRPC, etc)
+   Reason to change: If validation rules change
+
+4. STORAGE (storage/memory_store.go)
+   ✓ Only provides thread-safe key-value operations
+   ✓ Generic type (interface{})
+   ✓ No domain knowledge
+   ✓ Could be swapped for DB without touching other code
+   Reason to change: If storage backend changes
+
+5. REPOSITORY (repository/cat_repository.go)
+   ✓ Only maps domain operations to storage
+   ✓ Handles domain errors
+   ✓ No HTTP or validation logic
+   Reason to change: If data access patterns change
+
+6. SERVICE (service/cat_service.go)
+   ✓ Only orchestrates workflow
+   ✓ Delegates validation to validator
+   ✓ Delegates storage to repository
+   ✓ Delegates ID generation to ID generator
+   Reason to change: If business workflow changes
+
+7. REQUEST DTO (serialization/request.go)
+   ✓ Only contains request DTOs
+   ✓ Only decodes JSON to DTOs
+   ✓ No validation
+   ✓ No service calls
+   Reason to change: If input format changes
+
+8. RESPONSE DTO (serialization/response.go)
+   ✓ Only contains response DTOs
+   ✓ Only encodes to JSON
+   ✓ No business logic
+   Reason to change: If output format changes
+
+9. HANDLERS (handler/*.go)
+   ✓ One file per endpoint
+   ✓ Each only handles one operation
+   ✓ Minimal: Decode → Service → Encode
+   Reason to change: If endpoint logic changes (only that endpoint)
+
+10. ROUTER (routing/router.go)
+    ✓ Only maps paths to handlers
+    ✓ No business logic
+    ✓ No validation
+    Reason to change: If URL structure changes
+
+11. ERRORS (errors/errors.go)
+    ✓ Only defines error types
+    ✓ Error constructors and helpers
+    Reason to change: If error taxonomy changes
+
+================================================================================
+DEPENDENCY INJECTION & INITIALIZATION
+================================================================================
+
+main.go creates and wires all dependencies:
+
+    store → repository
+    repository ─┐
+    validator ──┼→ service
+    idGen ──────┘
+
+    service → create_handler
+              get_handler
+              get_all_handler
+              update_handler
+              delete_handler
+
+    handlers → router
+
+This architecture ensures:
+- No circular dependencies
+- Easy to test (mock any dependency)
+- Easy to replace components (swap storage, validator format, etc)
+- Clear initialization flow
+
+================================================================================
+HTTP ENDPOINTS & OPERATIONS
+================================================================================
+
+POST /cats
+  - Handler: create_cat.go (CreateCatHandler)
+  - Service: CreateCat(name, breed, color, age)
+  - Status: 201 Created
+  - Response: Cat (with generated ID)
+  - Errors: 400 Bad Request (validation), 500 Internal Server Error
+
+GET /cats
+  - Handler: get_all_cats.go (GetAllCatsHandler)
+  - Service: GetAllCats()
+  - Status: 200 OK
+  - Response: []Cat
+
+GET /cats/{id}
+  - Handler: get_cat.go (GetCatHandler)
+  - Service: GetCatByID(id)
+  - Status: 200 OK or 404 Not Found
+  - Response: Cat
+
+PUT /cats/{id}
+  - Handler: update_cat.go (UpdateCatHandler)
+  - Service: UpdateCat(id, name, breed, color, age)
+  - Status: 200 OK
+  - Response: Cat (updated)
+  - Errors: 400 Bad Request (validation), 404 Not Found
+
+DELETE /cats/{id}
+  - Handler: delete_cat.go (DeleteCatHandler)
+  - Service: DeleteCat(id)
+  - Status: 204 No Content
+  - Errors: 404 Not Found
+
+================================================================================
+KEY FILES & THEIR EXACT PURPOSE
+================================================================================
+
+main.go
+  Purpose: Initialize and wire all components
+  DI Container: Creates instances of all services/repositories
+  Server: Starts HTTP server on :8080
+  Imports: All packages to wire together
+  Lines: ~50
+
+entity/cat.go
+  Purpose: Define Cat data structure
+  Exports: Cat struct
+  No methods, no behavior
+  Lines: ~10
+
+id/generator.go
+  Purpose: Generate secure random IDs
+  Type: Generator
+  Methods: Generate() (string, error)
+  Uses: crypto/rand
+  Lines: ~25
+
+validation/cat_validator.go
+  Purpose: Validate Cat business rules
+  Type: CatValidator
+  Methods: ValidateCreate, ValidateUpdate, validateBasicFields
+  Rules: Name required (1-100), Age 0-50, Breed required (1-100), Color required (1-100)
+  Lines: ~60
+
+storage/memory_store.go
+  Purpose: Thread-safe in-memory key-value storage
+  Type: MemoryStore
+  Methods: Get, Set, Delete, GetAll, Exists
+  Concurrency: sync.RWMutex
+  Replaceable: Can be swapped for PostgreSQL, MongoDB, Redis, etc
+  Lines: ~55
+
+repository/cat_repository.go
+  Purpose: Cat data access layer
+  Type: CatRepository
+  Methods: Save, GetByID, GetAll, Update, Delete
+  Errors: Raises domain errors (NotFoundError, AlreadyExistsError)
+  Lines: ~65
+
+service/cat_service.go
+  Purpose: Orchestrate Cat operations
+  Type: CatService
+  Methods: CreateCat, GetCatByID, GetAllCats, UpdateCat, DeleteCat
+  Responsibility: Coordinate validator + ID gen + repository
+  Lines: ~106
+
+serialization/request.go
+  Purpose: Define and decode request DTOs
+  Types: CreateCatRequest, UpdateCatRequest
+  Functions: DecodeCreateCatRequest, DecodeUpdateCatRequest
+  Format: JSON
+  Lines: ~35
+
+serialization/response.go
+  Purpose: Define and encode response DTOs
+  Types: CatResponse, ErrorResponse
+  Functions: WriteJSON, WriteError, NewCatResponse
+  Format: JSON
+  Lines: ~45
+
+handler/create_cat.go
+  Purpose: Handle POST /cats
+  Type: CreateCatHandler
+  Responsibility: Decode → Service.CreateCat → Encode (201)
+  Lines: ~53
+
+handler/get_cat.go
+  Purpose: Handle GET /cats/{id}
+  Type: GetCatHandler
+  Responsibility: Extract ID → Service.GetCatByID → Encode (200) or error
+  Lines: ~53
+
+handler/get_all_cats.go
+  Purpose: Handle GET /cats
+  Type: GetAllCatsHandler
+  Responsibility: Service.GetAllCats → Encode (200)
+  Lines: ~40
+
+handler/update_cat.go
+  Purpose: Handle PUT /cats/{id}
+  Type: UpdateCatHandler
+  Responsibility: Extract ID → Decode → Service.UpdateCat → Encode (200)
+  Lines: ~60
+
+handler/delete_cat.go
+  Purpose: Handle DELETE /cats/{id}
+  Type: DeleteCatHandler
+  Responsibility: Extract ID → Service.DeleteCat → Return 204
+  Lines: ~50
+
+routing/router.go
+  Purpose: Route HTTP requests to handlers
+  Type: Router
+  Method: ServeHTTP (implements http.Handler)
+  Routes:
+    POST   /cats → CreateCatHandler
+    GET    /cats → GetAllCatsHandler
+    GET    /cats/{id} → GetCatHandler
+    PUT    /cats/{id} → UpdateCatHandler
+    DELETE /cats/{id} → DeleteCatHandler
+  Lines: ~60
+
+errors/errors.go
+  Purpose: Define domain error types
+  Types: ValidationError, NotFoundError, AlreadyExistsError
+  Methods: Error() string, IsValidationError(), IsNotFoundError(), IsAlreadyExistsError()
+  Lines: ~50
+
+================================================================================
+TESTING ISOLATION EXAMPLES
+================================================================================
+
+Test CatValidator independently:
+  - No HTTP mock needed
+  - No database mock needed
+  - Just create CatValidator, call ValidateCreate/ValidateUpdate
+
+Test CatService independently:
+  - Mock CatRepository
+  - Mock CatValidator
+  - Mock IDGenerator
+  - No HTTP layer needed
+
+Test CreateCatHandler independently:
+  - Mock CatService
+  - Send HTTP request to handler
+  - Check status code and response body
+
+Test MemoryStore independently:
+  - Create MemoryStore
+  - Call Get/Set/Delete/GetAll
+  - No HTTP or validation needed
+  - Could be replaced with PostgresStore test without changing other tests
+
+================================================================================
+EXTENSIBILITY EXAMPLES
+================================================================================
+
+Add new validation rule (e.g., name must be alphanumeric):
+  - ONLY modify: validation/cat_validator.go
+  - Add validation in validateBasicFields()
+  - All other files untouched
+
+Change storage to PostgreSQL:
+  - ONLY modify: storage/memory_store.go (or replace entirely)
+  - Possibly: repository/cat_repository.go (if queries change)
+  - All handlers, service, validation untouched
+
+Add new endpoint GET /cats/breed/{breed}:
+  - Create: handler/get_cats_by_breed.go
+  - Modify: repository/cat_repository.go (add GetByBreed method)
+  - Modify: service/cat_service.go (add GetCatsByBreed method)
+  - Modify: routing/router.go (add new route)
+  - No modification to: validation, storage, errors, entity, serialization, or other handlers
+
+Change response format from JSON to XML:
+  - ONLY modify: serialization/response.go
+  - Replace json.Marshal with xml.Marshal
+  - All handlers, service, router untouched
+
+Add new field to Cat (e.g., weight):
+  - Modify: entity/cat.go (add Weight field)
+  - Modify: serialization/request.go (add Weight to DTOs)
+  - Modify: serialization/response.go (add Weight to CatResponse)
+  - Modify: validation/cat_validator.go (add Weight validation)
+  - Update all handlers and service to pass weight parameter
+  - Everything else untouched
+
+================================================================================
+SOLID PRINCIPLES DEMONSTRATED
+================================================================================
+
+S - Single Responsibility ✓
+  Each class/file has exactly one reason to change
+
+O - Open/Closed ✓
+  Open for extension (new handlers, new validators)
+  Closed for modification (don't modify existing handlers to add new endpoints)
+
+L - Liskov Substitution ✓
+  MemoryStore can be replaced by PostgresStore without changing code
+
+D - Dependency Inversion ✓
+  High-level modules (handlers) don't depend on low-level modules (storage)
+  Both depend on abstractions (CatRepository interface concept)
+
+================================================================================
+RUNNING THE PROJECT
+================================================================================
+
+Prerequisites:
+  - Go 1.21 or higher
+  - No external dependencies (net/http stdlib only)
+
+Build:
+  $ cd go-srp-cats
+  $ go build -o server main.go
+
+Run:
+  $ ./server
+
+Output:
+  Starting Cat CRUD API server on http://localhost:8080
+  Endpoints:
+    POST   /cats       - Create a new cat
+    GET    /cats       - Get all cats
+    GET    /cats/{id}  - Get a specific cat
+    PUT    /cats/{id}  - Update a cat
+    DELETE /cats/{id}  - Delete a cat
+
+Test endpoints:
+  POST /cats
+    curl -X POST http://localhost:8080/cats \
+      -H "Content-Type: application/json" \
+      -d '{"name":"Minou","breed":"Persan","color":"Blanc","age":3}'
+
+  GET /cats
+    curl http://localhost:8080/cats
+
+  GET /cats/{id}
+    curl http://localhost:8080/cats/a1b2c3d4e5f6...
+
+  PUT /cats/{id}
+    curl -X PUT http://localhost:8080/cats/a1b2c3d4e5f6... \
+      -H "Content-Type: application/json" \
+      -d '{"name":"Nouveau Nom","breed":"Persan","color":"Gris","age":4}'
+
+  DELETE /cats/{id}
+    curl -X DELETE http://localhost:8080/cats/a1b2c3d4e5f6...
+
+================================================================================
+SUMMARY: WHY THIS ARCHITECTURE MATTERS
+================================================================================
+
+This project demonstrates that applying SRP rigorously creates:
+
+1. MODULARITY: Each component is independent
+2. TESTABILITY: Each component tested in isolation
+3. MAINTAINABILITY: Changes are localized
+4. FLEXIBILITY: Easy to extend without modification
+5. CLARITY: Clear responsibilities make code self-documenting
+6. SCALABILITY: Structure supports growth without architectural rework
+
+The key insight: "A class should have one, and only one, reason to change."
+
+This is not just theory—it's a practical architecture that scales from
+simple projects to large enterprise systems.
+
+================================================================================
