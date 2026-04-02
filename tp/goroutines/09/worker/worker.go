@@ -31,19 +31,41 @@ func (w *Worker) Run(nbWork int) {
 	for i := 0; i < nbWork; i++ {
 		ch <- i
 	}
-	close(ch) // permet de fermer le channel de communication
+	close(ch)
 	wg.Wait()
 }
 
-// do is executing a request lastly it's name was HeavyWork.
 func (w *Worker) do(workID chan int, wg *sync.WaitGroup) {
 	fmt.Printf("do called.\n")
-	time.Sleep(1 * time.Second) // simulation du temps de travail
-	newID := <-workID
-	fmt.Printf("work id: %v is finished.\n", newID)
-	_, err := w.service.Get(newID)
-	if err != nil {
-		print(err)
+
+	defer wg.Done()
+
+	for {
+		select {
+		case id, ok := <-workID:
+			if !ok {
+				fmt.Println("worker: channel closed, exit")
+				return
+			}
+			w.exec(id)
+		case <-time.After(5 * time.Second):
+			fmt.Println("worker: idle timeout, exit")
+			return
+		}
 	}
-	wg.Done()
+}
+
+func (w *Worker) exec(id int) {
+	done := make(chan struct{})
+	go func() {
+		_, _ = w.service.Get(id)
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		fmt.Printf("job %d: OK\n", id)
+	case <-time.After(200 * time.Millisecond):
+		fmt.Printf("job %d: TIMEOUT\n", id)
+	}
 }

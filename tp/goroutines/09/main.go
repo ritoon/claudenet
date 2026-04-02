@@ -3,8 +3,8 @@ package main
 import (
 	"time"
 
-	"tp/goroutines/09/service"
-	"tp/goroutines/09/worker"
+	"github.com/ritoon/claudenet/tp/goroutines/09/service"
+	"github.com/ritoon/claudenet/tp/goroutines/09/worker"
 )
 
 const NBWork = 10

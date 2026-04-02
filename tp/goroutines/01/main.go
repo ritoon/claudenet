@@ -9,7 +9,7 @@ const NBWork = 10
 
 func main() {
 	for i := 0; i < NBWork; i++ {
-		HeavyWork(i)
+		go HeavyWork(i)
 	}
 }
 

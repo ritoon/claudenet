@@ -11,14 +11,20 @@ const NBWork = 10
 func main() {
 	var wg sync.WaitGroup
 	wg.Add(NBWork)
+
+	ch := make(chan int)
 	for i := 0; i < NBWork; i++ {
-		go HeavyWork(&i, &wg)
+		go HeavyWork(ch, &wg)
+		ch <- i
 	}
+
+	close(ch)
 	wg.Wait()
 }
 
-func HeavyWork(workID *int, wg *sync.WaitGroup) {
+func HeavyWork(workID <-chan int, wg *sync.WaitGroup) {
+	fmt.Printf("HeavyWork called.\n")
 	time.Sleep(1 * time.Second) // simulation du temps de travail
-	fmt.Printf("work id: %v is finished.\n", workID)
+	fmt.Printf("work id: %v is finished.\n", <-workID)
 	wg.Done()
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,14 +11,11 @@ import (
 
 const NBWork = 10
 
-var (
-	wID = 0
-)
-
 func main() {
+
 	var wg sync.WaitGroup
 	wg.Add(NBWork)
-	//
+
 	ch := make(chan int)
 	for i := 0; i < NBWork; i++ {
 		go HeavyWork(ch, &wg)
@@ -25,15 +23,14 @@ func main() {
 	for i := 0; i < NBWork; i++ {
 		ch <- i
 	}
-	close(ch) // permet de fermer le channel de communication
+	close(ch)
 	wg.Wait()
 }
 
 func HeavyWork(workID chan int, wg *sync.WaitGroup) {
 	fmt.Printf("HeavyWork called.\n")
 	time.Sleep(1 * time.Second) // simulation du temps de travail
-	wID++                       // on incrémente l'ID du travail
-	newID := wID
+	newID := <-workID
 	fmt.Printf("work id: %v is finished.\n", newID)
 	_, err := subWebserviceCalled(newID)
 	if err != nil {
@@ -42,29 +39,39 @@ func HeavyWork(workID chan int, wg *sync.WaitGroup) {
 	wg.Done()
 }
 
-func subWebserviceCalled(workID int) (data []byte, err error) {
+var httpClient = http.Client{
+	Timeout: time.Second * 3,
+}
+
+func subWebserviceCalled(workID int) (body []byte, err error) {
 	fmt.Printf("SubWebserviceCalled called id: %d\n", workID)
 	defer func() {
-		fmt.Println("SubWebserviceCalled finished err:", err, "data:", string(data))
+		fmt.Println("SubWebserviceCalled finished err:", err, "resp:", string(body))
 	}()
-	// ce weekend, je pars en vacances
-	// je n'ai pas le temps de faire ça proprement
-	req, err := http.NewRequest(http.MethodGet, "https://example.com", nil)
+
+	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://rickandmortyapi.com/api", nil)
 	if err != nil {
 		return nil, err
 	}
 
-	// bim bam boum, je fais ma requête
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("status code: %d", resp.StatusCode)
+	}
+
+	body, err = io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	data, err = io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	// on fait comme à la maison
-	return data, err
+	return body, err
 }
