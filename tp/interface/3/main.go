@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"log"
 	"net/http"
@@ -27,15 +28,33 @@ func main() {
 	}
 }
 
+type CaracterResponse map[string]any
+
+func (cr *CaracterResponse) Validate() error {
+	// Implémenter une validation de la structure du payload
+	return nil
+}
+
 func handlerCaracters(c *gin.Context) {
 	// 1 appeler getCaracter()
-
+	data, err := getCaracter()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 	// 2 initialiser une structure de type any
+	payload := make(CaracterResponse)
 
 	// 3 réaliser un bind avec le package encoding/json
 
-	// 4 Renvoyer le payload
+	//if err := c.BindJSON(&payload); err != nil {
+	if err := json.Unmarshal(data, &payload); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
+	// 4 Renvoyer le payload
+	c.JSON(http.StatusOK, payload)
 }
 
 func getCaracter() ([]byte, error) {
